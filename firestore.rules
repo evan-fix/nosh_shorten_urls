@@ -1,0 +1,44 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /propertyManagement/{parent}/properties/{document} {
+      allow create: if request.resource.data.addressOwner == /databases/$(database)/documents/users/$(request.auth.uid);
+      allow read: if true;
+      allow write: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    match /{path=**}/properties/{document} {
+      allow read: if true;
+    }
+
+
+    match /propertyManagement/{document} {
+      allow create: if request.resource.data.owner == /databases/$(database)/documents/users/$(request.auth.uid);
+      allow read: if true;
+      allow write: if request.auth != null;
+      allow delete: if request.auth != null;
+    }
+
+    match /users/{document} {
+      allow create: if request.auth.uid == document;
+      allow read: if request.auth.uid == document;
+      allow write: if request.auth.uid == document;
+      allow delete: if false;
+    }
+
+    match /{document=**} {
+      allow read, write: if request.auth.token.email.matches("firebase@flutterflow.io");
+    }
+    match /user/{user}/currentCart/{document} {
+    	allow create: if request.resource.data.quantity > 0;
+      allow write: if request.resource.data.quantity > 0;
+      allow update: if request.resource.data.quantity > 0;
+      allow delete: if request.auth.uid == document;
+    }
+    match /{document=**} {
+      allow read, write: if true;
+    }
+  }
+}
